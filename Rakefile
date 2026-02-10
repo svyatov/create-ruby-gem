@@ -13,4 +13,8 @@ RuboCop::RakeTask.new do |task|
   task.options = %w[--format progress --parallel --autocorrect]
 end
 
+require 'yard'
+
+YARD::Rake::YardocTask.new
+
 task default: %i[spec rubocop]

@@ -11,3 +11,5 @@ gem 'rake', '= 13.3.1'
 gem 'rspec', '= 3.13.2'
 
 gem 'rubocop', '1.84.1'
+
+gem 'yard', '~> 0.9'
