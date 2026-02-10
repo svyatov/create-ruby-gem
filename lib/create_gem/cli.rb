@@ -3,7 +3,25 @@
 require 'optparse'
 
 module CreateGem
+  # Main entry point that orchestrates the entire create-gem flow.
+  #
+  # Parses CLI flags, detects runtime versions, runs the interactive wizard
+  # (or loads a preset), builds the +bundle gem+ command, and executes it.
+  # All collaborators are injected via constructor for testability.
+  #
+  # @example Run from the command line
+  #   CreateGem::CLI.start(ARGV)
   class CLI
+    # Constructs and runs a CLI instance with the given arguments.
+    #
+    # @param argv [Array<String>] command-line arguments
+    # @param out [IO] standard output stream
+    # @param err [IO] standard error stream
+    # @param store [Config::Store] configuration persistence
+    # @param detector [RuntimeVersions::Detector] runtime version detector
+    # @param runner [Runner, nil] command runner (built from +out+ if nil)
+    # @param prompter [UI::Prompter, nil] user interaction handler
+    # @return [Integer] exit code (0 on success, non-zero on failure)
     def self.start(
       argv = ARGV,
       out: $stdout,
@@ -25,6 +43,13 @@ module CreateGem
       instance.start
     end
 
+    # @param argv [Array<String>] command-line arguments
+    # @param out [IO] standard output stream
+    # @param err [IO] standard error stream
+    # @param store [Config::Store] configuration persistence
+    # @param detector [RuntimeVersions::Detector] runtime version detector
+    # @param runner [Runner] command runner
+    # @param prompter [UI::Prompter, nil] user interaction handler
     def initialize(argv:, out:, err:, store:, detector:, runner:, prompter:)
       @argv = argv.dup
       @out = out
@@ -37,8 +62,13 @@ module CreateGem
       @options = {}
     end
 
+    # @return [UI::Palette]
     attr_reader :palette
 
+    # Runs the CLI: parses flags, dispatches to the appropriate action,
+    # and returns an exit code.
+    #
+    # @return [Integer] exit code (0 success, 1 error, 130 interrupt)
     def start
       parse_options!
 
@@ -86,6 +116,7 @@ module CreateGem
 
     private
 
+    # @return [void]
     def parse_options!
       OptionParser.new do |parser|
         parser.on('--preset NAME') { |value| @options[:preset] = value }
@@ -100,6 +131,8 @@ module CreateGem
       end.parse!(@argv)
     end
 
+    # @raise [ValidationError] if conflicting flags are combined
+    # @return [void]
     def validate_top_level_flags!
       conflicting_create_action = @options[:preset] || @options[:save_preset] || !@argv.empty?
       query_action = @options[:list_presets] || @options[:show_preset]
@@ -123,11 +156,15 @@ module CreateGem
       raise ValidationError, '--version cannot be combined with other actions'
     end
 
+    # @return [Integer] exit code
     def print_version
       @out.puts(VERSION)
       0
     end
 
+    # Prints runtime version info and supported options.
+    #
+    # @return [Integer] exit code
     def doctor
       runtime_versions = resolved_runtime_versions
       @out.puts("ruby: #{runtime_versions.ruby}")
@@ -142,11 +179,14 @@ module CreateGem
       1
     end
 
+    # @return [Integer] exit code
     def list_presets
       @store.preset_names.each { |name| @out.puts(name) }
       0
     end
 
+    # @return [Integer] exit code
+    # @raise [ValidationError] if the preset does not exist
     def show_preset
       preset = @store.preset(@options[:show_preset])
       raise ValidationError, "Preset not found: #{@options[:show_preset]}" unless preset
@@ -156,11 +196,14 @@ module CreateGem
       0
     end
 
+    # @return [Integer] exit code
     def delete_preset
       @store.delete_preset(@options[:delete_preset])
       0
     end
 
+    # @return [String] gem name from argv or interactive prompt
+    # @raise [ValidationError] if gem name is required but missing
     def resolve_gem_name!
       gem_name = @argv.shift
       return gem_name if gem_name && !gem_name.empty?
@@ -170,6 +213,8 @@ module CreateGem
       prompter.text('Gem name:', allow_empty: false)
     end
 
+    # @return [Hash{Symbol => Object}] preset options
+    # @raise [ValidationError] if the preset does not exist
     def load_preset_options!
       preset = @store.preset(@options[:preset])
       raise ValidationError, "Preset not found: #{@options[:preset]}" unless preset
@@ -177,6 +222,15 @@ module CreateGem
       symbolize_keys(preset)
     end
 
+    # Runs the interactive wizard loop with summary + edit-again flow.
+    #
+    # @param gem_name [String]
+    # @param builder [Command::Builder]
+    # @param compatibility_entry [Compatibility::Matrix::Entry]
+    # @param last_used [Hash{Symbol => Object}]
+    # @param runtime_versions [RuntimeVersions::Versions]
+    # @param bundler_defaults [Hash{Symbol => Object}]
+    # @return [Hash{Symbol => Object}] selected options
     def run_interactive_wizard!(
       gem_name:,
       builder:,
@@ -210,6 +264,9 @@ module CreateGem
       end
     end
 
+    # @param command [Array<String>]
+    # @param runtime_versions [RuntimeVersions::Versions]
+    # @return [void]
     def show_summary(command:, runtime_versions:)
       command_name = command.first(2).join(' ')
       gem_name = command[2].to_s
@@ -226,6 +283,8 @@ module CreateGem
       end
     end
 
+    # @param runtime_versions [RuntimeVersions::Versions]
+    # @return [String]
     def format_runtime_versions(runtime_versions)
       [
         ['ruby', runtime_versions.ruby],
@@ -236,10 +295,14 @@ module CreateGem
       end.join(', ')
     end
 
+    # @param args [Array<String>]
+    # @return [String]
     def format_args(args)
       args.map { |argument| format_argument(argument) }.join(' ')
     end
 
+    # @param argument [String]
+    # @return [String]
     def format_argument(argument)
       return palette.color(:arg_value, argument) unless argument.start_with?('--')
       return palette.color(:arg_name, argument) unless argument.include?('=')
@@ -248,6 +311,8 @@ module CreateGem
       "#{palette.color(:arg_name, name)}#{palette.color(:arg_eq, '=')}#{palette.color(:arg_value, value)}"
     end
 
+    # @param selected_options [Hash{Symbol => Object}]
+    # @return [void]
     def save_preset_if_requested(selected_options)
       if @options[:save_preset]
         @store.save_preset(@options[:save_preset], selected_options)
@@ -261,10 +326,13 @@ module CreateGem
       @store.save_preset(preset_name, selected_options)
     end
 
+    # @param hash [Hash{String => Object}]
+    # @return [Hash{Symbol => Object}]
     def symbolize_keys(hash)
       hash.transform_keys(&:to_sym)
     end
 
+    # @return [RuntimeVersions::Versions]
     def resolved_runtime_versions
       if @options[:bundler_version]
         return RuntimeVersions::Versions.new(
@@ -278,6 +346,8 @@ module CreateGem
       normalize_runtime_versions(detected)
     end
 
+    # @param detected [RuntimeVersions::Versions, Object]
+    # @return [RuntimeVersions::Versions]
     def normalize_runtime_versions(detected)
       return detected if detected.is_a?(RuntimeVersions::Versions)
 
@@ -288,6 +358,7 @@ module CreateGem
       )
     end
 
+    # @return [UI::Prompter]
     def prompter
       @prompter ||= UI::Prompter.new(out: @out)
     end

@@ -2,7 +2,20 @@
 
 module CreateGem
   module Options
+    # Registry of every +bundle gem+ option create-gem knows about.
+    #
+    # Each entry in {DEFINITIONS} describes the option's type and CLI flags.
+    # {ORDER} controls the sequence in which the wizard presents options.
+    #
+    # @see Options::Validator
+    # @see Wizard::Session
     module Catalog
+      # Option definitions keyed by symbolic name.
+      #
+      # Each value is a Hash with +:type+ and the relevant flag keys
+      # (+:on+/+:off+ for toggles, +:flag+ for enums/strings, etc.).
+      #
+      # @return [Hash{Symbol => Hash}]
       DEFINITIONS = {
         exe: { type: :toggle, on: '--exe', off: '--no-exe' },
         coc: { type: :toggle, on: '--coc', off: '--no-coc' },
@@ -18,8 +31,16 @@ module CreateGem
         bundle_install: { type: :toggle, on: '--bundle', off: '--no-bundle' }
       }.freeze
 
+      # Wizard step order — matches the sequence users see.
+      #
+      # @return [Array<Symbol>]
       ORDER = DEFINITIONS.keys.freeze
 
+      # Fetches the definition for a given option key.
+      #
+      # @param key [Symbol, String]
+      # @return [Hash] the option definition
+      # @raise [KeyError] if the key is unknown
       def self.fetch(key)
         DEFINITIONS.fetch(key.to_sym)
       end

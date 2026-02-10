@@ -16,5 +16,14 @@ require_relative 'create_gem/ui/prompter'
 require_relative 'create_gem/wizard/session'
 require_relative 'create_gem/cli'
 
+# Interactive TUI wizard for +bundle gem+.
+#
+# Detects the user's Ruby/Bundler versions, shows only compatible options
+# via a static compatibility matrix, and builds the correct +bundle gem+
+# command. Config (presets, last-used options) is stored in
+# +~/.config/create-gem/config.yml+.
+#
+# @see CreateGem::CLI Entry point
+# @see CreateGem::Compatibility::Matrix Bundler version compatibility
 module CreateGem
 end

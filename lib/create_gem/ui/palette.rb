@@ -2,9 +2,17 @@
 
 module CreateGem
   module UI
+    # Color constants for terminal output.
+    #
+    # Maps semantic roles (e.g. +:summary_label+, +:arg_name+) to ANSI 256-color
+    # codes or +cli-ui+ basic color names, depending on terminal capabilities.
     class Palette
+      # ANSI reset sequence.
       RESET = "\e[0m"
 
+      # Role-to-color mappings for 256-color terminals.
+      #
+      # @return [Hash{Symbol => Integer}]
       ROLE_COLORS_256 = {
         control_back: 45,
         control_exit: 203,
@@ -18,6 +26,9 @@ module CreateGem
         arg_value: 214
       }.freeze
 
+      # Role-to-color mappings for basic (8/16-color) terminals.
+      #
+      # @return [Hash{Symbol => String}]
       ROLE_COLORS_BASIC = {
         control_back: 'cyan',
         control_exit: 'red',
@@ -31,10 +42,16 @@ module CreateGem
         arg_value: 'yellow'
       }.freeze
 
+      # @param env [Hash] environment variables (defaults to +ENV+)
       def initialize(env: ENV)
         @env = env
       end
 
+      # Wraps text in the appropriate ANSI color for the given role.
+      #
+      # @param role [Symbol] a key from {ROLE_COLORS_256}/{ROLE_COLORS_BASIC}
+      # @param text [String] the text to colorize
+      # @return [String]
       def color(role, text)
         if supports_256_colors?
           "\e[38;5;#{ROLE_COLORS_256.fetch(role)}m#{text}#{RESET}"
@@ -45,6 +62,7 @@ module CreateGem
 
       private
 
+      # @return [Boolean]
       def supports_256_colors?
         term = @env.fetch('TERM', '')
         colorterm = @env.fetch('COLORTERM', '')

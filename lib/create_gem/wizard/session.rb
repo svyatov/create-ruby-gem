@@ -2,10 +2,23 @@
 
 module CreateGem
   module Wizard
+    # Step-by-step interactive prompt loop for choosing +bundle gem+ options.
+    #
+    # Walks through each supported option in {Options::Catalog::ORDER},
+    # presenting only the options supported by the detected Bundler version.
+    # Supports back-navigation via +Ctrl+B+.
+    #
+    # @see CLI#run_interactive_wizard!
     class Session
+      # Sentinel returned by the prompter when the user presses Ctrl+B.
       BACK = '__back__'
+
+      # Sentinel indicating the user wants Bundler's built-in default.
       BUNDLER_DEFAULT = '__bundler_default__'
 
+      # Human-readable labels for each option key.
+      #
+      # @return [Hash{Symbol => String}]
       LABELS = {
         exe: 'Create executable',
         coc: 'Add CODE_OF_CONDUCT.md',
@@ -21,6 +34,9 @@ module CreateGem
         bundle_install: 'Run bundle install'
       }.freeze
 
+      # Short explanations shown below each wizard step.
+      #
+      # @return [Hash{Symbol => String}]
       HELP_TEXT = {
         exe: 'Adds an executable file in exe/ so users can run your gem as a command.',
         coc: 'Adds a code of conduct template for contributors.',
@@ -36,6 +52,9 @@ module CreateGem
         bundle_install: 'Runs bundle install after generating the gem.'
       }.freeze
 
+      # Per-choice hints displayed next to enum/string choices.
+      #
+      # @return [Hash{Symbol => Hash{String => String}}]
       CHOICE_HELP = {
         ext: {
           'c' => 'classic native extension path',
@@ -70,6 +89,10 @@ module CreateGem
         }
       }.freeze
 
+      # @param compatibility_entry [Compatibility::Matrix::Entry]
+      # @param defaults [Hash{Symbol => Object}] initial default values (e.g. last-used)
+      # @param prompter [UI::Prompter]
+      # @param bundler_defaults [Hash{Symbol => Object}] Bundler's own defaults
       def initialize(compatibility_entry:, defaults:, prompter:, bundler_defaults: {})
         @compatibility_entry = compatibility_entry
         @bundler_defaults = symbolize_keys(bundler_defaults)
@@ -77,6 +100,9 @@ module CreateGem
         @values = sanitize_defaults(defaults)
       end
 
+      # Runs the wizard and returns the selected options.
+      #
+      # @return [Hash{Symbol => Object}]
       def run
         keys = Options::Catalog::ORDER.select { |key| @compatibility_entry.supports_option?(key) }
         index = 0
@@ -96,6 +122,10 @@ module CreateGem
 
       private
 
+      # @param key [Symbol]
+      # @param index [Integer]
+      # @param total [Integer]
+      # @return [Object] user answer or {BACK}
       def ask_for(key, index:, total:)
         definition = Options::Catalog.fetch(key)
         label = LABELS.fetch(key)
@@ -114,6 +144,9 @@ module CreateGem
         end
       end
 
+      # @param question [String]
+      # @param key [Symbol]
+      # @return [true, false, nil, String]
       def ask_toggle(question, key)
         choices = %w[yes no]
         current = @values[key]
@@ -126,6 +159,9 @@ module CreateGem
         nil
       end
 
+      # @param question [String]
+      # @param key [Symbol]
+      # @return [true, String, nil]
       def ask_flag(question, key)
         choices = %w[yes no]
         current = @values[key]
@@ -138,6 +174,10 @@ module CreateGem
         nil
       end
 
+      # @param question [String]
+      # @param key [Symbol]
+      # @param definition [Hash]
+      # @return [String, false, String]
       def ask_enum(question, key, definition)
         choices = @compatibility_entry.allowed_values(key).dup
         choices << 'none' if definition[:none]
@@ -150,6 +190,9 @@ module CreateGem
         answer
       end
 
+      # @param question [String]
+      # @param key [Symbol]
+      # @return [String, nil, String]
       def ask_string(question, key)
         has_current = @values[key].is_a?(String) && !@values[key].empty?
         choices =
@@ -170,6 +213,9 @@ module CreateGem
         value.empty? ? nil : value
       end
 
+      # @param key [Symbol]
+      # @param value [Object]
+      # @return [void]
       def assign_value(key, value)
         if value.nil? || value == BUNDLER_DEFAULT
           @values.delete(key)
@@ -178,10 +224,16 @@ module CreateGem
         end
       end
 
+      # @param hash [Hash]
+      # @return [Hash{Symbol => Object}]
       def symbolize_keys(hash)
         hash.transform_keys(&:to_sym)
       end
 
+      # Filters defaults to only supported options and removes false flags.
+      #
+      # @param hash [Hash]
+      # @return [Hash{Symbol => Object}]
       def sanitize_defaults(hash)
         symbolize_keys(hash)
           .select { |key, _| @compatibility_entry.supports_option?(key) }
@@ -191,6 +243,9 @@ module CreateGem
           end
       end
 
+      # @param current [Object]
+      # @param key [Symbol]
+      # @return [String]
       def toggle_default_choice(current, key)
         return 'yes' if current == true
         return 'no' if current == false
@@ -198,10 +253,16 @@ module CreateGem
         @bundler_defaults[key] == true ? 'yes' : 'no'
       end
 
+      # @param key [Symbol]
+      # @return [String]
       def flag_default_choice(key)
         @bundler_defaults[key] == true ? 'yes' : 'no'
       end
 
+      # @param key [Symbol]
+      # @param current [Object]
+      # @param choices [Array<String>]
+      # @return [String]
       def enum_default_choice(key, current, choices)
         return 'none' if current == false && choices.include?('none')
         return current if current.is_a?(String) && choices.include?(current)
@@ -213,6 +274,13 @@ module CreateGem
         choices.first
       end
 
+      # Presents a choice list with the default marked and reordered first.
+      #
+      # @param question [String]
+      # @param key [Symbol]
+      # @param choices [Array<String>]
+      # @param default_choice [String]
+      # @return [String] the raw choice value, or {BACK}
       def choose_with_default_marker(question, key:, choices:, default_choice:)
         selected_default = choices.include?(default_choice) ? default_choice : choices.first
         ordered_choices = reorder_default_first(choices, selected_default)
@@ -229,17 +297,29 @@ module CreateGem
         selected_default
       end
 
+      # @param choices [Array<String>]
+      # @param default_choice [String]
+      # @return [Array<String>]
       def reorder_default_first(choices, default_choice)
         return choices.dup unless choices.include?(default_choice)
 
         [default_choice] + choices.reject { |choice| choice == default_choice }
       end
 
+      # @param index [Integer]
+      # @param total [Integer]
+      # @param key [Symbol]
+      # @param label [String]
+      # @return [String]
       def render_question(index:, total:, key:, label:)
         step = format('%<current>02d/%<total>02d', current: index + 1, total: total)
         "{{cyan:#{step}}} {{bold:#{label}}} - #{HELP_TEXT.fetch(key)}"
       end
 
+      # @param key [Symbol]
+      # @param choice [String]
+      # @param default_choice [String]
+      # @return [String]
       def render_choice_label(key, choice, default_choice:)
         label = choice
         hint = choice_hint(key, choice)
@@ -248,6 +328,9 @@ module CreateGem
         label
       end
 
+      # @param key [Symbol]
+      # @param choice [String]
+      # @return [String, nil]
       def choice_hint(key, choice)
         return "use #{@values[key]}" if choice == 'keep' && @values[key].is_a?(String) && !@values[key].empty?
 

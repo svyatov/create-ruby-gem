@@ -2,9 +2,15 @@
 
 module CreateGem
   module BundlerDefaults
+    # Reads Bundler's own default settings (from +~/.bundle/config+ or env)
+    # to use as initial defaults in the wizard.
     class Detector
+      # Sentinel for "no settings argument provided".
       UNSET = Object.new.freeze
 
+      # Fallback defaults used when Bundler settings are unavailable.
+      #
+      # @return [Hash{Symbol => Object}]
       FALLBACKS = {
         exe: false,
         coc: nil,
@@ -20,6 +26,9 @@ module CreateGem
         bundle_install: false
       }.freeze
 
+      # Maps option keys to their Bundler settings keys.
+      #
+      # @return [Hash{Symbol => String}]
       KEY_MAP = {
         coc: 'gem.coc',
         changelog: 'gem.changelog',
@@ -32,10 +41,14 @@ module CreateGem
         linter: 'gem.linter'
       }.freeze
 
+      # @param settings [#[], nil] Bundler settings object (or nil to auto-detect)
       def initialize(settings: UNSET)
         @settings = settings.equal?(UNSET) ? default_settings : settings
       end
 
+      # Returns a hash of default values derived from Bundler settings.
+      #
+      # @return [Hash{Symbol => Object}]
       def detect
         defaults = FALLBACKS.dup
         return defaults unless @settings
@@ -51,12 +64,15 @@ module CreateGem
 
       private
 
+      # @return [Bundler::Settings, nil]
       def default_settings
         return nil unless defined?(::Bundler)
 
         ::Bundler.settings
       end
 
+      # @param value [String, Object, nil]
+      # @return [Boolean, String, nil]
       def normalize(value)
         case value
         when 'true'
