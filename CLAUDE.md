@@ -59,3 +59,53 @@ GitHub Actions matrix: Ruby 3.2–4.0 × Bundler 2.4–4.0. Runs `bundle exec ra
 - Ruby >= 3.2. `frozen_string_literal: true` everywhere.
 - RSpec with `expect` syntax only, monkey patching disabled.
 - Version in `lib/create_gem/version.rb`. SemVer, currently `0.x.y`.
+
+## Documentation Style
+
+All classes and methods must have YARD documentation. Follow these conventions:
+
+- Always leave a **blank line** between the main description and `@` attributes (params, return, etc.)
+- Document all public methods with description, params, and return types
+- Document all private methods with params and return types, add description for complex logic
+- Include `@example` blocks for non-obvious usage patterns
+- Use `@raise` to document exceptions
+- **Omit descriptions that just repeat the code** - if the method name and signature make it obvious, only include `@param`, `@return`, and `@raise` tags without a description
+
+```ruby
+# Good - blank line before @param
+# Calculates the check digit for this identifier.
+#
+# @param value [String] the value to calculate
+# @return [Integer] the calculated check digit
+def calculate(value)
+end
+
+# Bad - no blank line
+# Calculates the check digit for this identifier.
+# @param value [String] the value to calculate
+# @return [Integer] the calculated check digit
+def calculate(value)
+end
+```
+
+## Pre-Commit Checklist
+
+Before committing changes, always verify these files are updated to accurately reflect the changes:
+
+- **CLAUDE.md** - Update this file
+- **README.md** - Update usage examples, Table of Contents, and compatibility matrix
+- **CHANGELOG.md** - Add entry under `[Unreleased]` section describing the change (use only standard Keep a Changelog categories — see sec_id's CLAUDE.md for the canonical list)
+- **create-gem.gemspec** - Update `description` if adding/removing supported features
+
+## Releasing a New Version
+
+This project follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html):
+- **MAJOR** — breaking changes (incompatible API changes)
+- **MINOR** — new features (backwards-compatible)
+- **PATCH** — bug fixes (backwards-compatible)
+
+1. Update `lib/create_gem/version.rb` with the new version number
+2. Update `CHANGELOG.md`: change `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and add new empty `[Unreleased]` section
+3. Commit changes: `git commit -am "chore: bump version to X.Y.Z"`
+4. Release: `bundle exec rake release` — builds the gem, creates and pushes the git tag, pushes to RubyGems.org
+5. Create GitHub release at https://github.com/leonid-svyatov/create-gem/releases with notes from CHANGELOG

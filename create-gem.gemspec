@@ -18,6 +18,8 @@ Gem::Specification.new do |spec|
   spec.metadata['homepage_uri'] = spec.homepage
   spec.metadata['source_code_uri'] = spec.homepage
   spec.metadata['changelog_uri'] = 'https://github.com/leonid-svyatov/create-gem/blob/main/CHANGELOG.md'
+  spec.metadata['documentation_uri'] = 'https://rubydoc.info/gems/create-gem'
+  spec.metadata['bug_tracker_uri'] = 'https://github.com/leonid-svyatov/create-gem/issues'
   spec.metadata['rubygems_mfa_required'] = 'true'
 
   spec.files = Dir.glob(%w[lib/**/*.rb exe/*]) + %w[LICENSE.txt README.md CHANGELOG.md]
