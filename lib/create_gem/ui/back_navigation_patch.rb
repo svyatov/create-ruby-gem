@@ -10,7 +10,7 @@ module CreateGem
     # Monkey-patches +CLI::UI::Prompt+ to intercept Ctrl+B for back-navigation.
     #
     # @api private
-    module InteractiveKeymap
+    module BackNavigationPatch
       # ASCII code for Ctrl+B.
       CTRL_B = "\u0002"
 
@@ -21,18 +21,16 @@ module CreateGem
         def read_char
           char = super
 
-          raise BackKeyPressed if char == InteractiveKeymap::CTRL_B
+          raise BackKeyPressed if char == BackNavigationPatch::CTRL_B
 
           char
         end
       end
 
-      module_function
-
       # Prepends the Ctrl+B patch onto +CLI::UI::Prompt+ (idempotent).
       #
       # @return [void]
-      def apply!
+      def self.apply!
         singleton = ::CLI::UI::Prompt.singleton_class
         return if singleton.ancestors.include?(PromptReadCharPatch)
 

@@ -18,18 +18,20 @@ module CreateGem
     # @param out [IO] standard output stream
     # @param err [IO] standard error stream
     # @param store [Config::Store] configuration persistence
-    # @param detector [RuntimeVersions::Detector] runtime version detector
+    # @param detector [Detection::Runtime] runtime version detector
     # @param runner [Runner, nil] command runner (built from +out+ if nil)
     # @param prompter [UI::Prompter, nil] user interaction handler
+    # @param palette [UI::Palette, nil] color palette for terminal output
     # @return [Integer] exit code (0 on success, non-zero on failure)
     def self.start(
       argv = ARGV,
       out: $stdout,
       err: $stderr,
       store: Config::Store.new,
-      detector: RuntimeVersions::Detector.new,
+      detector: Detection::Runtime.new,
       runner: nil,
-      prompter: nil
+      prompter: nil,
+      palette: nil
     )
       instance = new(
         argv: argv,
@@ -38,19 +40,21 @@ module CreateGem
         store: store,
         detector: detector,
         runner: runner || Runner.new(out: out),
-        prompter: prompter
+        prompter: prompter,
+        palette: palette
       )
-      instance.start
+      instance.run
     end
 
     # @param argv [Array<String>] command-line arguments
     # @param out [IO] standard output stream
     # @param err [IO] standard error stream
     # @param store [Config::Store] configuration persistence
-    # @param detector [RuntimeVersions::Detector] runtime version detector
+    # @param detector [Detection::Runtime] runtime version detector
     # @param runner [Runner] command runner
     # @param prompter [UI::Prompter, nil] user interaction handler
-    def initialize(argv:, out:, err:, store:, detector:, runner:, prompter:)
+    # @param palette [UI::Palette, nil] color palette for terminal output
+    def initialize(argv:, out:, err:, store:, detector:, runner:, prompter:, palette:)
       @argv = argv.dup
       @out = out
       @err = err
@@ -58,18 +62,15 @@ module CreateGem
       @detector = detector
       @runner = runner
       @prompter = prompter
-      @palette = UI::Palette.new
+      @palette = palette || UI::Palette.new
       @options = {}
     end
-
-    # @return [UI::Palette]
-    attr_reader :palette
 
     # Runs the CLI: parses flags, dispatches to the appropriate action,
     # and returns an exit code.
     #
     # @return [Integer] exit code (0 success, 1 error, 130 interrupt)
-    def start
+    def run
       parse_options!
 
       validate_top_level_flags!
@@ -82,8 +83,8 @@ module CreateGem
 
       runtime_versions = resolved_runtime_versions
       compatibility_entry = Compatibility::Matrix.for(runtime_versions.bundler)
-      builder = Command::Builder.new(bundler_version: runtime_versions.bundler)
-      bundler_defaults = BundlerDefaults::Detector.new.detect
+      builder = CommandBuilder.new(compatibility_entry: compatibility_entry)
+      bundler_defaults = Detection::BundlerDefaults.new.detect
       last_used = symbolize_keys(@store.last_used)
 
       gem_name = resolve_gem_name!
@@ -101,6 +102,7 @@ module CreateGem
           )
         end
 
+      Options::Validator.new(compatibility_entry).validate!(gem_name: gem_name, options: selected_options)
       command = builder.build(gem_name: gem_name, options: selected_options)
       @runner.run!(command, dry_run: @options[:dry_run])
       @store.save_last_used(selected_options)
@@ -115,6 +117,8 @@ module CreateGem
     end
 
     private
+
+    attr_reader :palette
 
     # @return [void]
     def parse_options!
@@ -225,10 +229,10 @@ module CreateGem
     # Runs the interactive wizard loop with summary + edit-again flow.
     #
     # @param gem_name [String]
-    # @param builder [Command::Builder]
+    # @param builder [CommandBuilder]
     # @param compatibility_entry [Compatibility::Matrix::Entry]
     # @param last_used [Hash{Symbol => Object}]
-    # @param runtime_versions [RuntimeVersions::Versions]
+    # @param runtime_versions [Detection::RuntimeInfo]
     # @param bundler_defaults [Hash{Symbol => Object}]
     # @return [Hash{Symbol => Object}] selected options
     def run_interactive_wizard!(
@@ -245,7 +249,7 @@ module CreateGem
         prompter.say("Press #{palette.color(:control_exit, 'Ctrl+C')} to exit.")
       end
       loop do
-        selected_options = Wizard::Session.new(
+        selected_options = Wizard.new(
           compatibility_entry: compatibility_entry,
           defaults: defaults,
           bundler_defaults: bundler_defaults,
@@ -265,7 +269,7 @@ module CreateGem
     end
 
     # @param command [Array<String>]
-    # @param runtime_versions [RuntimeVersions::Versions]
+    # @param runtime_versions [Detection::RuntimeInfo]
     # @return [void]
     def show_summary(command:, runtime_versions:)
       command_name = command.first(2).join(' ')
@@ -283,7 +287,7 @@ module CreateGem
       end
     end
 
-    # @param runtime_versions [RuntimeVersions::Versions]
+    # @param runtime_versions [Detection::RuntimeInfo]
     # @return [String]
     def format_runtime_versions(runtime_versions)
       [
@@ -332,35 +336,25 @@ module CreateGem
       hash.transform_keys(&:to_sym)
     end
 
-    # @return [RuntimeVersions::Versions]
+    # @return [Detection::RuntimeInfo]
     def resolved_runtime_versions
       if @options[:bundler_version]
-        return RuntimeVersions::Versions.new(
+        return Detection::RuntimeInfo.new(
           ruby: Gem::Version.new(RUBY_VERSION),
           rubygems: Gem::Version.new(Gem::VERSION),
           bundler: Gem::Version.new(@options[:bundler_version])
         )
       end
 
-      detected = @detector.detect!
-      normalize_runtime_versions(detected)
-    end
-
-    # @param detected [RuntimeVersions::Versions, Object]
-    # @return [RuntimeVersions::Versions]
-    def normalize_runtime_versions(detected)
-      return detected if detected.is_a?(RuntimeVersions::Versions)
-
-      RuntimeVersions::Versions.new(
-        ruby: Gem::Version.new(RUBY_VERSION),
-        rubygems: Gem::Version.new(Gem::VERSION),
-        bundler: Gem::Version.new(detected.to_s)
-      )
+      @detector.detect!
     end
 
     # @return [UI::Prompter]
     def prompter
-      @prompter ||= UI::Prompter.new(out: @out)
+      @prompter ||= begin
+        UI::Prompter.setup!
+        UI::Prompter.new(out: @out)
+      end
     end
   end
 end

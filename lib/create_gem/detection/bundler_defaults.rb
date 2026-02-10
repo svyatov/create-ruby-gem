@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 module CreateGem
-  module BundlerDefaults
+  module Detection
     # Reads Bundler's own default settings (from +~/.bundle/config+ or env)
     # to use as initial defaults in the wizard.
-    class Detector
+    class BundlerDefaults
       # Sentinel for "no settings argument provided".
       UNSET = Object.new.freeze
 

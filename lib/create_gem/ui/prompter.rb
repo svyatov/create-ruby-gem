@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'cli/ui'
-require_relative 'interactive_keymap'
+require_relative 'back_navigation_patch'
 
 module CreateGem
   module UI
@@ -10,11 +10,19 @@ module CreateGem
     # Every prompt the wizard issues goes through this class, making it
     # easy to inject a test double.
     class Prompter
+      # Enables the +cli-ui+ stdout router and applies the Ctrl+B patch.
+      #
+      # Call once before creating a Prompter instance. Idempotent.
+      #
+      # @return [void]
+      def self.setup!
+        ::CLI::UI::StdoutRouter.enable
+        BackNavigationPatch.apply!
+      end
+
       # @param out [IO] output stream
       def initialize(out: $stdout)
         @out = out
-        ::CLI::UI::StdoutRouter.enable
-        InteractiveKeymap.apply!
       end
 
       # Opens a visual frame with a title.
@@ -31,11 +39,11 @@ module CreateGem
       # @param question [String]
       # @param options [Array<String>]
       # @param default [String, nil]
-      # @return [String] selected option, or {Wizard::Session::BACK} on Ctrl+B
+      # @return [String] selected option, or {Wizard::BACK} on Ctrl+B
       def choose(question, options:, default: nil)
         ::CLI::UI.ask(question, options: options, default: default, filter_ui: false)
       rescue BackKeyPressed
-        Wizard::Session::BACK
+        Wizard::BACK
       end
 
       # Prompts for free-text input.

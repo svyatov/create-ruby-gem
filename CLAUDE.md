@@ -22,20 +22,24 @@ exe/create-gem            # run the CLI locally
 
 Entry point: `exe/create-gem` → `CreateGem::CLI.start(ARGV)`.
 
-Key flow: CLI parses flags → detects runtime versions → looks up `Compatibility::Matrix` entry for the Bundler version → runs `Wizard::Session` (interactive) or loads a preset → `Command::Builder` assembles the `bundle gem` command array → `Runner` executes it.
+Key flow: CLI parses flags → detects runtime versions → looks up `Compatibility::Matrix` entry for the Bundler version → runs `Wizard` (interactive) or loads a preset → validates options → `CommandBuilder` assembles the `bundle gem` command array → `Runner` executes it.
 
 ### Core modules
 
 - **`CLI`** — option parsing (`OptionParser`), flag validation, orchestrates the entire flow. All collaborators are injected via constructor for testability.
+- **`Detection::BundlerVersion`** — detects installed Bundler version via `bundle --version`.
+- **`Detection::BundlerDefaults`** — reads Bundler's own default settings from `~/.bundle/config`.
+- **`Detection::Runtime`** — detects Ruby, RubyGems, and Bundler versions. Returns a `Detection::RuntimeInfo` struct.
 - **`Compatibility::Matrix`** — static `TABLE` of `Entry` structs mapping Bundler version ranges (2.4–2.x, 3.x, 4.x) to supported `bundle gem` options. Single source of truth for what each Bundler version supports.
 - **`Options::Catalog`** — defines every `bundle gem` option (type: `:toggle`, `:flag`, `:enum`, `:string`) with its CLI flags. `ORDER` array controls wizard step sequence.
 - **`Options::Validator`** — validates user-selected options against the compatibility entry.
-- **`Wizard::Session`** — step-by-step interactive prompt loop with back-navigation (`Ctrl+B`). Uses `Prompter` for all I/O.
-- **`Command::Builder`** — converts option hash into a `['bundle', 'gem', name, ...]` array.
+- **`Wizard`** — step-by-step interactive prompt loop with back-navigation (`Ctrl+B`). Uses `Prompter` for all I/O.
+- **`CommandBuilder`** — converts option hash into a `['bundle', 'gem', name, ...]` array. Pure translator (validation is done by CLI before building).
 - **`Config::Store`** — YAML persistence for presets and last-used options. Atomic writes via `Tempfile` + rename.
 - **`Runner`** — shells out via `CLI::Kit::System.system`. Supports `--dry-run`.
-- **`UI::Prompter`** — thin wrapper around `cli-ui` gem. All user interaction goes through this (for test doubles).
+- **`UI::Prompter`** — thin wrapper around `cli-ui` gem. All user interaction goes through this (for test doubles). Call `Prompter.setup!` once before use.
 - **`UI::Palette`** — color constants for terminal output.
+- **`UI::BackNavigationPatch`** — monkey-patches `CLI::UI::Prompt` to intercept Ctrl+B.
 
 ### Option type system
 

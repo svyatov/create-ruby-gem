@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 module CreateGem
-  module BundlerVersion
+  module Detection
     # Detects the installed Bundler version by running +bundle --version+.
-    class Detector
+    class BundlerVersion
       # @return [Regexp] pattern to extract a version string
       VERSION_PATTERN = /(\d+\.\d+\.\d+)/
 

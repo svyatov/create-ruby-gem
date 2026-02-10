@@ -46,7 +46,7 @@ RSpec.describe CreateGem::CLI do
   it 'lists presets' do
     out = StringIO.new
     store = instance_double(CreateGem::Config::Store, preset_names: %w[fast full])
-    detector = instance_double(CreateGem::BundlerVersion::Detector)
+    detector = instance_double(CreateGem::Detection::Runtime)
     runner = instance_double(CreateGem::Runner)
 
     status = described_class.start(
@@ -69,7 +69,12 @@ RSpec.describe CreateGem::CLI do
     allow(store).to receive(:preset).with('fast').and_return({ 'test' => 'rspec', 'ci' => 'github' })
     allow(store).to receive(:save_last_used)
     allow(store).to receive(:save_preset)
-    detector = instance_double(CreateGem::BundlerVersion::Detector, detect!: Gem::Version.new('4.0.4'))
+    versions = CreateGem::Detection::RuntimeInfo.new(
+      ruby: Gem::Version.new(RUBY_VERSION),
+      rubygems: Gem::Version.new(Gem::VERSION),
+      bundler: Gem::Version.new('4.0.4')
+    )
+    detector = instance_double(CreateGem::Detection::Runtime, detect!: versions)
     runner = instance_double(CreateGem::Runner)
 
     expect(runner).to receive(:run!).with(
@@ -93,13 +98,18 @@ RSpec.describe CreateGem::CLI do
   it 'returns error when preset is missing' do
     err = StringIO.new
     store = instance_double(CreateGem::Config::Store, preset: nil, last_used: {})
+    versions = CreateGem::Detection::RuntimeInfo.new(
+      ruby: Gem::Version.new(RUBY_VERSION),
+      rubygems: Gem::Version.new(Gem::VERSION),
+      bundler: Gem::Version.new('4.0.4')
+    )
 
     status = described_class.start(
       ['my_gem', '--preset', 'missing'],
       out: StringIO.new,
       err: err,
       store: store,
-      detector: instance_double(CreateGem::BundlerVersion::Detector, detect!: Gem::Version.new('4.0.4')),
+      detector: instance_double(CreateGem::Detection::Runtime, detect!: versions),
       runner: instance_double(CreateGem::Runner),
       prompter: instance_double(CreateGem::UI::Prompter)
     )
@@ -125,7 +135,7 @@ RSpec.describe CreateGem::CLI do
       out: StringIO.new,
       err: StringIO.new,
       store: store,
-      detector: instance_double(CreateGem::BundlerVersion::Detector),
+      detector: instance_double(CreateGem::Detection::Runtime),
       runner: runner,
       prompter: prompter
     )
@@ -136,12 +146,12 @@ RSpec.describe CreateGem::CLI do
 
   it 'prints doctor output' do
     out = StringIO.new
-    versions = CreateGem::RuntimeVersions::Versions.new(
+    versions = CreateGem::Detection::RuntimeInfo.new(
       ruby: Gem::Version.new('4.0.1'),
       rubygems: Gem::Version.new('4.0.4'),
       bundler: Gem::Version.new('4.0.4')
     )
-    detector = instance_double(CreateGem::RuntimeVersions::Detector, detect!: versions)
+    detector = instance_double(CreateGem::Detection::Runtime, detect!: versions)
 
     status = described_class.start(
       ['--doctor'],
@@ -167,7 +177,7 @@ RSpec.describe CreateGem::CLI do
       out: StringIO.new,
       err: err,
       store: instance_double(CreateGem::Config::Store),
-      detector: instance_double(CreateGem::RuntimeVersions::Detector),
+      detector: instance_double(CreateGem::Detection::Runtime),
       runner: instance_double(CreateGem::Runner),
       prompter: CLIFakePrompter.new
     )
@@ -183,7 +193,7 @@ RSpec.describe CreateGem::CLI do
       out: out,
       err: StringIO.new,
       store: instance_double(CreateGem::Config::Store),
-      detector: instance_double(CreateGem::RuntimeVersions::Detector),
+      detector: instance_double(CreateGem::Detection::Runtime),
       runner: instance_double(CreateGem::Runner),
       prompter: CLIFakePrompter.new
     )
@@ -199,7 +209,7 @@ RSpec.describe CreateGem::CLI do
       out: StringIO.new,
       err: err,
       store: instance_double(CreateGem::Config::Store),
-      detector: instance_double(CreateGem::RuntimeVersions::Detector),
+      detector: instance_double(CreateGem::Detection::Runtime),
       runner: instance_double(CreateGem::Runner),
       prompter: CLIFakePrompter.new
     )
@@ -217,7 +227,7 @@ RSpec.describe CreateGem::CLI do
       out: out,
       err: StringIO.new,
       store: store,
-      detector: instance_double(CreateGem::RuntimeVersions::Detector),
+      detector: instance_double(CreateGem::Detection::Runtime),
       runner: instance_double(CreateGem::Runner),
       prompter: CLIFakePrompter.new
     )
@@ -233,6 +243,11 @@ RSpec.describe CreateGem::CLI do
     runner = instance_double(CreateGem::Runner)
     prompter = CLIFakePrompter.new
     allow(prompter).to receive(:choose).and_raise(Interrupt)
+    versions = CreateGem::Detection::RuntimeInfo.new(
+      ruby: Gem::Version.new(RUBY_VERSION),
+      rubygems: Gem::Version.new(Gem::VERSION),
+      bundler: Gem::Version.new('4.0.4')
+    )
 
     err = StringIO.new
     status = described_class.start(
@@ -240,7 +255,7 @@ RSpec.describe CreateGem::CLI do
       out: StringIO.new,
       err: err,
       store: store,
-      detector: instance_double(CreateGem::RuntimeVersions::Detector, detect!: Gem::Version.new('4.0.4')),
+      detector: instance_double(CreateGem::Detection::Runtime, detect!: versions),
       runner: runner,
       prompter: prompter
     )

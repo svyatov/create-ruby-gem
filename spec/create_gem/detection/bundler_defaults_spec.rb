@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe CreateGem::BundlerDefaults::Detector do
+RSpec.describe CreateGem::Detection::BundlerDefaults do
   it 'returns fallbacks when no settings are available' do
     defaults = described_class.new(settings: nil).detect
 

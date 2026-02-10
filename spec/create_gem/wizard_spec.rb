@@ -16,7 +16,7 @@ class WizardFakePrompter
     @seen_questions << question
     @seen_options << options
     value = @choices.shift || default
-    return CreateGem::Wizard::Session::BACK if value == CreateGem::Wizard::Session::BACK
+    return CreateGem::Wizard::BACK if value == CreateGem::Wizard::BACK
 
     value ||= options.first
     unless options.include?(value)
@@ -45,7 +45,7 @@ class WizardFakePrompter
   end
 end
 
-RSpec.describe CreateGem::Wizard::Session do
+RSpec.describe CreateGem::Wizard do
   it 'supports going back to previous steps' do
     entry = CreateGem::Compatibility::Matrix::Entry.new(
       requirement: Gem::Requirement.new('>= 0'),
@@ -56,7 +56,7 @@ RSpec.describe CreateGem::Wizard::Session do
       }
     )
     prompter = WizardFakePrompter.new(
-      choices: ['yes', 'set', CreateGem::Wizard::Session::BACK, 'set', 'rspec'],
+      choices: ['yes', 'set', CreateGem::Wizard::BACK, 'set', 'rspec'],
       texts: %w[old-user leonid]
     )
 

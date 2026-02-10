@@ -2,8 +2,10 @@
 
 require 'spec_helper'
 
-RSpec.describe CreateGem::Command::Builder do
-  subject(:builder) { described_class.new(bundler_version: '4.0.4') }
+RSpec.describe CreateGem::CommandBuilder do
+  subject(:builder) do
+    described_class.new(compatibility_entry: CreateGem::Compatibility::Matrix.for('4.0.4'))
+  end
 
   it 'builds a bundle gem command with supported flags' do
     command = builder.build(
@@ -34,11 +36,5 @@ RSpec.describe CreateGem::Command::Builder do
   it 'supports no-* enum values' do
     command = builder.build(gem_name: 'my_gem', options: { test: false, ci: false, linter: false, ext: false })
     expect(command).to include('--no-test', '--no-ci', '--no-linter', '--no-ext')
-  end
-
-  it 'raises for invalid values' do
-    expect do
-      builder.build(gem_name: 'my_gem', options: { ci: 'unknown' })
-    end.to raise_error(CreateGem::ValidationError)
   end
 end

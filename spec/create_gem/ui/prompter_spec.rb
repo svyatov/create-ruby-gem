@@ -9,11 +9,12 @@ RSpec.describe CreateGem::UI::Prompter do
   end
 
   it 'maps Ctrl+B signal to back token' do
+    described_class.setup!
     prompter = described_class.new(out: StringIO.new)
     allow(CLI::UI).to receive(:ask).and_raise(CreateGem::UI::BackKeyPressed)
 
     expect(
       prompter.choose('Pick one', options: %w[yes no], default: 'no')
-    ).to eq(CreateGem::Wizard::Session::BACK)
+    ).to eq(CreateGem::Wizard::BACK)
   end
 end
