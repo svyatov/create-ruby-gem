@@ -17,4 +17,11 @@ RSpec.describe CreateGem::Runner do
       runner.run!(%w[bundle gem my_gem])
     end.to raise_error(CreateGem::Error, /Command failed/)
   end
+
+  it 'returns true on successful execution' do
+    status = instance_double(Process::Status, success?: true)
+    runner = described_class.new(out: StringIO.new, system_runner: ->(*) { status })
+
+    expect(runner.run!(%w[bundle gem my_gem])).to be(true)
+  end
 end

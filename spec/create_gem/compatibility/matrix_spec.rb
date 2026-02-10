@@ -20,5 +20,35 @@ RSpec.describe CreateGem::Compatibility::Matrix do
       expect { described_class.for('1.17.2') }
         .to raise_error(CreateGem::UnsupportedBundlerVersionError, /Supported ranges:/)
     end
+
+    it 'returns a match for bundler 3.x' do
+      entry = described_class.for('3.1.0')
+      expect(entry.supports_option?(:changelog)).to be(true)
+      expect(entry.supports_option?(:linter)).to be(true)
+      expect(entry.allowed_values(:ext)).to eq(%w[c])
+    end
+
+    it 'raises for version below minimum' do
+      expect { described_class.for('2.3.9') }
+        .to raise_error(CreateGem::UnsupportedBundlerVersionError)
+    end
+  end
+
+  describe '.supported_ranges' do
+    it 'returns an array of range strings' do
+      ranges = described_class.supported_ranges
+      expect(ranges).to be_an(Array)
+      expect(ranges.length).to eq(described_class::TABLE.length)
+    end
+  end
+
+  describe CreateGem::Compatibility::Matrix::Entry do
+    it 'returns nil for toggle allowed_values' do
+      entry = described_class.new(
+        requirement: Gem::Requirement.new('>= 0'),
+        supported_options: { exe: nil }
+      )
+      expect(entry.allowed_values(:exe)).to be_nil
+    end
   end
 end

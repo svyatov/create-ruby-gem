@@ -127,4 +127,91 @@ RSpec.describe CreateGem::Wizard do
     expect(prompter.seen_questions.first).to include('Add CODE_OF_CONDUCT.md')
     expect(prompter.seen_questions.first).to include('Adds a code of conduct template')
   end
+
+  it 'completes a straight-through run without back-navigation' do
+    entry = CreateGem::Compatibility::Matrix::Entry.new(
+      requirement: Gem::Requirement.new('>= 0'),
+      supported_options: { exe: nil, coc: nil }
+    )
+    prompter = WizardFakePrompter.new(choices: %w[yes no])
+
+    result = described_class.new(compatibility_entry: entry, defaults: {}, prompter: prompter).run
+    expect(result).to eq(exe: true, coc: false)
+  end
+
+  it 'stays at index 0 when going back on first step' do
+    entry = CreateGem::Compatibility::Matrix::Entry.new(
+      requirement: Gem::Requirement.new('>= 0'),
+      supported_options: { exe: nil }
+    )
+    prompter = WizardFakePrompter.new(
+      choices: [CreateGem::Wizard::BACK, 'yes']
+    )
+
+    result = described_class.new(compatibility_entry: entry, defaults: {}, prompter: prompter).run
+    expect(result).to eq(exe: true)
+  end
+
+  it 'deletes key from result for flag answered no' do
+    entry = CreateGem::Compatibility::Matrix::Entry.new(
+      requirement: Gem::Requirement.new('>= 0'),
+      supported_options: { git: nil }
+    )
+    prompter = WizardFakePrompter.new(choices: %w[no])
+
+    result = described_class.new(
+      compatibility_entry: entry, defaults: { git: true }, prompter: prompter
+    ).run
+    expect(result).not_to have_key(:git)
+  end
+
+  it 'returns false for enum none' do
+    entry = CreateGem::Compatibility::Matrix::Entry.new(
+      requirement: Gem::Requirement.new('>= 0'),
+      supported_options: { test: %w[rspec] }
+    )
+    prompter = WizardFakePrompter.new(choices: %w[none])
+
+    result = described_class.new(compatibility_entry: entry, defaults: {}, prompter: prompter).run
+    expect(result).to eq(test: false)
+  end
+
+  it 'prompts for text on string set' do
+    entry = CreateGem::Compatibility::Matrix::Entry.new(
+      requirement: Gem::Requirement.new('>= 0'),
+      supported_options: { edit: nil }
+    )
+    prompter = WizardFakePrompter.new(choices: %w[set], texts: %w[vim])
+
+    result = described_class.new(compatibility_entry: entry, defaults: {}, prompter: prompter).run
+    expect(result).to eq(edit: 'vim')
+  end
+
+  it 'deletes key for string none' do
+    entry = CreateGem::Compatibility::Matrix::Entry.new(
+      requirement: Gem::Requirement.new('>= 0'),
+      supported_options: { edit: nil }
+    )
+    prompter = WizardFakePrompter.new(choices: %w[none])
+
+    result = described_class.new(
+      compatibility_entry: entry, defaults: {}, prompter: prompter
+    ).run
+    expect(result).not_to have_key(:edit)
+  end
+
+  it 'sanitize_defaults removes unsupported keys' do
+    entry = CreateGem::Compatibility::Matrix::Entry.new(
+      requirement: Gem::Requirement.new('>= 0'),
+      supported_options: { exe: nil }
+    )
+    prompter = WizardFakePrompter.new(choices: %w[yes])
+
+    result = described_class.new(
+      compatibility_entry: entry,
+      defaults: { exe: true, linter: 'rubocop', changelog: true },
+      prompter: prompter
+    ).run
+    expect(result).to eq(exe: true)
+  end
 end

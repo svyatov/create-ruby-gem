@@ -47,4 +47,35 @@ RSpec.describe CreateGem::Config::Store do
       expect { store.last_used }.to raise_error(CreateGem::ConfigError)
     end
   end
+
+  it 'uses XDG_CONFIG_HOME when set' do
+    Dir.mktmpdir do |dir|
+      stub_const('ENV', ENV.to_h.merge('XDG_CONFIG_HOME' => dir))
+      store = described_class.new
+      expect(store.path).to eq(File.join(dir, 'create-gem', 'config.yml'))
+    end
+  end
+
+  it 'falls back to ~/.config when XDG_CONFIG_HOME is unset' do
+    stub_const('ENV', ENV.to_h.except('XDG_CONFIG_HOME'))
+    store = described_class.new
+    expect(store.path).to eq(File.join(Dir.home, '.config', 'create-gem', 'config.yml'))
+  end
+
+  it 'creates directory on first write' do
+    Dir.mktmpdir do |dir|
+      nested_path = File.join(dir, 'sub', 'dir', 'config.yml')
+      store = described_class.new(path: nested_path)
+      store.save_last_used(test: 'rspec')
+      expect(File.file?(nested_path)).to be(true)
+    end
+  end
+
+  it 'delete_preset is no-op for missing preset' do
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, 'config.yml')
+      store = described_class.new(path: path)
+      expect { store.delete_preset('nonexistent') }.not_to raise_error
+    end
+  end
 end

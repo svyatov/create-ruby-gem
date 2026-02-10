@@ -51,4 +51,34 @@ RSpec.describe CreateGem::Options::Validator do
       validator.validate!(gem_name: 'my_gem', options: { git: false })
     end.to raise_error(CreateGem::ValidationError, /Invalid value/)
   end
+
+  it 'rejects empty string gem name' do
+    expect do
+      validator.validate!(gem_name: '', options: {})
+    end.to raise_error(CreateGem::ValidationError, /Invalid gem name/)
+  end
+
+  it 'rejects nil gem name' do
+    expect do
+      validator.validate!(gem_name: nil, options: {})
+    end.to raise_error(CreateGem::ValidationError, /Invalid gem name/)
+  end
+
+  it 'rejects non-boolean for toggle' do
+    expect do
+      validator.validate!(gem_name: 'my_gem', options: { exe: 'yes' })
+    end.to raise_error(CreateGem::ValidationError, /Invalid value/)
+  end
+
+  it 'rejects non-string for string type' do
+    expect do
+      validator.validate!(gem_name: 'my_gem', options: { github_username: 123 })
+    end.to raise_error(CreateGem::ValidationError, /Invalid value/)
+  end
+
+  it 'accepts nil value for any option type' do
+    expect(
+      validator.validate!(gem_name: 'my_gem', options: { exe: nil, test: nil, git: nil, github_username: nil })
+    ).to be(true)
+  end
 end

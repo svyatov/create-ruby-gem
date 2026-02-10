@@ -29,4 +29,29 @@ RSpec.describe CreateGem::Detection::BundlerDefaults do
     expect(defaults[:ci]).to eq('github')
     expect(defaults[:linter]).to eq('rubocop')
   end
+
+  it 'only overrides keys present in settings' do
+    settings = { 'gem.test' => 'rspec' }
+    defaults = described_class.new(settings: settings).detect
+
+    expect(defaults[:test]).to eq('rspec')
+    expect(defaults[:exe]).to eq(false)
+    expect(defaults[:ci]).to be_nil
+  end
+
+  it 'returns fallbacks when settings raise StandardError' do
+    settings = Object.new
+    def settings.[](_key) = raise(StandardError, 'boom')
+
+    defaults = described_class.new(settings: settings).detect
+    expect(defaults).to eq(described_class::FALLBACKS)
+  end
+
+  it 'normalizes string booleans to actual booleans' do
+    settings = { 'gem.coc' => 'true', 'gem.mit' => 'false' }
+    defaults = described_class.new(settings: settings).detect
+
+    expect(defaults[:coc]).to be(true)
+    expect(defaults[:mit]).to be(false)
+  end
 end
