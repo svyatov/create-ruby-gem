@@ -1,75 +1,149 @@
-# create-gem
+# create-gem [![Gem Version](https://img.shields.io/gem/v/create-gem)](https://rubygems.org/gems/create-gem) [![CI](https://github.com/leonid-svyatov/create-gem/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/leonid-svyatov/create-gem/actions?query=workflow%3ACI)
 
-Interactive wizard for `bundle gem`.
+> Stop forgetting `bundle gem` options. An interactive TUI wizard that detects your Bundler version, shows only the options it supports, remembers your choices, and saves presets.
+
+## Table of Contents
+
+- [Supported Versions](#supported-versions)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Interactive Wizard](#interactive-wizard)
+- [Preset System](#preset-system)
+- [Compatibility Matrix](#compatibility-matrix)
+- [Configuration](#configuration)
+- [CLI Reference](#cli-reference)
+- [Development](#development)
+- [Contributing](#contributing)
+- [Changelog](#changelog)
+- [Versioning](#versioning)
+- [License](#license)
+
+## Supported Versions
+
+Ruby 3.2+ and Bundler 2.4+ are required.
 
 ## Installation
-
-Install the gem and add to the application's Gemfile by executing:
-
-```bash
-bundle add create-gem
-```
-
-If bundler is not being used to manage dependencies, install the gem by executing:
 
 ```bash
 gem install create-gem
 ```
 
-## Usage
+## Quick Start
 
 ```bash
-create-gem my_gem
-create-gem --list-presets
-create-gem --show-preset my-defaults
-create-gem my_gem --preset my-defaults
-create-gem my_gem --preset my-defaults --dry-run
-create-gem my_gem --save-preset my-defaults
-create-gem --delete-preset my-defaults
-create-gem --doctor
-create-gem --version
+create-gem my_awesome_gem
 ```
 
-Config is stored at `~/.config/create-gem/config.yml`.
+The wizard detects your Ruby and Bundler versions, walks you through every supported option, shows a summary of the `bundle gem` command it will run, and lets you edit or confirm before executing.
 
-Interactive mode behavior:
-- Press Enter to keep the default choice on each step.
-- Press `Ctrl+C` to exit at any time.
-- Press `Ctrl+B` to revisit the previous step.
-- Defaults are always shown as option `1`.
-- Each step includes a short plain-English explanation.
-- The wizard marks the current default variant as `option (default)`.
-- Summary shows the exact `bundle gem` command.
+## Interactive Wizard
 
-Version behavior:
-- Detects Ruby, RubyGems, and Bundler versions at runtime.
-- Uses a static Bundler compatibility matrix to expose only supported options.
+Running `create-gem <name>` starts the step-by-step wizard:
 
-## Release
+1. **Version detection** — detects Ruby, RubyGems, and Bundler versions at runtime.
+2. **Option filtering** — shows only options your Bundler version supports (see [Compatibility Matrix](#compatibility-matrix)).
+3. **Smart defaults** — uses your last-used choices as defaults, falling back to Bundler's own settings.
+4. **Back-navigation** — press `Ctrl+B` to revisit the previous step.
+5. **Summary** — displays the exact `bundle gem` command with color-coded arguments.
+6. **Edit-again loop** — choose "edit again" to change options, or "create" to execute.
+7. **Preset save prompt** — after creation, optionally save your choices as a named preset.
 
-Versioning:
-- Follow SemVer.
-- Use `0.x.y` for pre-1.0 development.
-- Bump:
-  - patch for bug fixes,
-  - minor for backward-compatible features,
-  - major for breaking changes.
+Press `Ctrl+C` at any time to exit.
 
-Release checklist:
-1. Update `lib/create_gem/version.rb`.
-2. Update `CHANGELOG.md` under `[Unreleased]` and cut a version section.
-3. Run `bundle exec rake`.
-4. Run `bundle exec rake release`.
+## Preset System
+
+Save, load, and manage option presets:
+
+```bash
+# Save options as a preset during gem creation
+create-gem my_gem --save-preset oss-defaults
+
+# Create a gem using a saved preset (non-interactive)
+create-gem my_gem --preset oss-defaults
+
+# List all saved presets
+create-gem --list-presets
+
+# Show a preset's options
+create-gem --show-preset oss-defaults
+
+# Delete a preset
+create-gem --delete-preset oss-defaults
+```
+
+## Compatibility Matrix
+
+Options available depend on your Bundler version. The wizard automatically hides unsupported options.
+
+| Option | Bundler 2.4–2.x | Bundler 3.x | Bundler 4.x |
+|--------|:---:|:---:|:---:|
+| `--exe` / `--no-exe` | ✓ | ✓ | ✓ |
+| `--coc` / `--no-coc` | ✓ | ✓ | ✓ |
+| `--changelog` / `--no-changelog` | — | ✓ | ✓ |
+| `--ext` | c | c | c, go, rust |
+| `--git` | ✓ | ✓ | ✓ |
+| `--github-username` | ✓ | ✓ | ✓ |
+| `--mit` / `--no-mit` | ✓ | ✓ | ✓ |
+| `--test` | minitest, rspec, test-unit | minitest, rspec, test-unit | minitest, rspec, test-unit |
+| `--ci` | circle, github, gitlab | circle, github, gitlab | circle, github, gitlab |
+| `--linter` | — | rubocop, standard | rubocop, standard |
+| `--edit` | ✓ | ✓ | ✓ |
+| `--bundle` / `--no-bundle` | ✓ | ✓ | ✓ |
+
+## Configuration
+
+Config is stored at `~/.config/create-gem/config.yml` (or `$XDG_CONFIG_HOME/create-gem/config.yml`).
+
+The file contains:
+
+- `version` — schema version (currently `1`)
+- `last_used` — the options from your most recent gem creation
+- `presets` — named option sets saved via `--save-preset` or the post-creation prompt
+
+## CLI Reference
+
+| Flag | Description |
+|------|-------------|
+| `<name>` | Gem name (prompted interactively if omitted) |
+| `--preset NAME` | Use a saved preset (non-interactive) |
+| `--save-preset NAME` | Save the selected options as a preset |
+| `--list-presets` | List all saved preset names |
+| `--show-preset NAME` | Show a preset's options |
+| `--delete-preset NAME` | Delete a saved preset |
+| `--dry-run` | Print the `bundle gem` command without executing |
+| `--bundler-version VERSION` | Override the detected Bundler version |
+| `--doctor` | Print runtime versions and supported options |
+| `--version` | Print the create-gem version |
 
 ## Development
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies.
+Then, run `bundle exec rake` to run the tests and linter.
+You can also run `bin/console` for an interactive prompt.
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```bash
+bundle exec rake          # tests + rubocop (default task)
+bundle exec rake spec     # tests only
+bundle exec rake yard     # generate YARD docs into doc/
+exe/create-gem            # run the CLI locally
+```
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/leonid-svyatov/create-gem.
+1. Fork it
+2. Create your feature branch (`git checkout -b my-new-feature`)
+3. Make your changes and run tests (`bundle exec rake`)
+4. Commit using [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) format (`git commit -m 'feat: add some feature'`)
+5. Push to the branch (`git push origin my-new-feature`)
+6. Create a new Pull Request
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for a detailed history of changes, following [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
+
+## Versioning
+
+This project follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
 
 ## License
 
