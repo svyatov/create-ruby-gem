@@ -1,28 +1,65 @@
-# Create::Gem
+# create-gem
 
-TODO: Delete this and the text below, and describe your gem
-
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/create/gem`. To experiment with that code, run `bin/console` for an interactive prompt.
+Interactive wizard for `bundle gem`.
 
 ## Installation
-
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
 
 Install the gem and add to the application's Gemfile by executing:
 
 ```bash
-bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+bundle add create-gem
 ```
 
 If bundler is not being used to manage dependencies, install the gem by executing:
 
 ```bash
-gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+gem install create-gem
 ```
 
 ## Usage
 
-TODO: Write usage instructions here
+```bash
+create-gem my_gem
+create-gem --list-presets
+create-gem --show-preset my-defaults
+create-gem my_gem --preset my-defaults
+create-gem my_gem --preset my-defaults --dry-run
+create-gem my_gem --save-preset my-defaults
+create-gem --delete-preset my-defaults
+create-gem --doctor
+create-gem --version
+```
+
+Config is stored at `~/.config/create-gem/config.yml`.
+
+Interactive mode behavior:
+- Press Enter to keep the default choice on each step.
+- Press `Ctrl+C` to exit at any time.
+- Press `Ctrl+B` to revisit the previous step.
+- Defaults are always shown as option `1`.
+- Each step includes a short plain-English explanation.
+- The wizard marks the current default variant as `option (default)`.
+- Summary shows the exact `bundle gem` command.
+
+Version behavior:
+- Detects Ruby, RubyGems, and Bundler versions at runtime.
+- Uses a static Bundler compatibility matrix to expose only supported options.
+
+## Release
+
+Versioning:
+- Follow SemVer.
+- Use `0.x.y` for pre-1.0 development.
+- Bump:
+  - patch for bug fixes,
+  - minor for backward-compatible features,
+  - major for breaking changes.
+
+Release checklist:
+1. Update `lib/create_gem/version.rb`.
+2. Update `CHANGELOG.md` under `[Unreleased]` and cut a version section.
+3. Run `bundle exec rake`.
+4. Run `bundle exec rake release`.
 
 ## Development
 
@@ -32,7 +69,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/create-gem.
+Bug reports and pull requests are welcome on GitHub at https://github.com/leonid-svyatov/create-gem.
 
 ## License
 

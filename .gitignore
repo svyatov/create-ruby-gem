@@ -3,9 +3,11 @@
 /_yardoc/
 /coverage/
 /doc/
+/docs/
 /pkg/
 /spec/reports/
 /tmp/
+.rubocop_cache/
 
 # rspec failure tracking
 .rspec_status

@@ -1,0 +1,54 @@
+# frozen_string_literal: true
+
+require 'spec_helper'
+
+RSpec.describe CreateGem::Options::Validator do
+  subject(:validator) { described_class.new(entry) }
+
+  let(:entry) { CreateGem::Compatibility::Matrix.for('4.0.4') }
+
+  it 'accepts valid options' do
+    expect(
+      validator.validate!(
+        gem_name: 'my_gem',
+        options: { test: 'rspec', ci: false, exe: true, github_username: 'leonid' }
+      )
+    ).to be(true)
+  end
+
+  it 'rejects invalid gem name' do
+    expect do
+      validator.validate!(gem_name: '1bad', options: {})
+    end.to raise_error(CreateGem::ValidationError, /Invalid gem name/)
+  end
+
+  it 'rejects unknown options' do
+    expect do
+      validator.validate!(gem_name: 'my_gem', options: { unknown: true })
+    end.to raise_error(CreateGem::ValidationError, /Unknown option/)
+  end
+
+  it 'rejects unsupported option for entry' do
+    old_entry = CreateGem::Compatibility::Matrix.for('2.5.0')
+    old_validator = described_class.new(old_entry)
+
+    expect do
+      old_validator.validate!(gem_name: 'my_gem', options: { changelog: true })
+    end.to raise_error(CreateGem::ValidationError, /not supported/)
+  end
+
+  it 'rejects unsupported value for entry' do
+    old_entry = CreateGem::Compatibility::Matrix.for('2.5.0')
+    old_validator = described_class.new(old_entry)
+
+    expect do
+      old_validator.validate!(gem_name: 'my_gem', options: { ext: 'rust' })
+    end.to raise_error(CreateGem::ValidationError, /not supported/)
+  end
+
+  it 'rejects false for one-way flags' do
+    expect do
+      validator.validate!(gem_name: 'my_gem', options: { git: false })
+    end.to raise_error(CreateGem::ValidationError, /Invalid value/)
+  end
+end
