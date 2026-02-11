@@ -1,6 +1,7 @@
 # create-ruby-gem [![Gem Version](https://img.shields.io/gem/v/create-ruby-gem)](https://rubygems.org/gems/create-ruby-gem) [![CI](https://github.com/svyatov/create-ruby-gem/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/svyatov/create-ruby-gem/actions?query=workflow%3ACI)
 
-> Create Ruby gems with an interactive CLI wizard, which remembers your choices! No more `bundle gem` flags look-ups 🙌
+> Create Ruby gems with an interactive CLI wizard, which remembers your choices!  
+> No more `bundle gem` flags look-ups 🙌
 
 ## Table of Contents
 
