@@ -2,7 +2,7 @@
 
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in create-gem.gemspec
+# Specify your gem's dependencies in create-ruby-gem.gemspec
 gemspec
 
 gem 'irb', '1.17.0'

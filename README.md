@@ -1,6 +1,6 @@
-# create-gem [![Gem Version](https://img.shields.io/gem/v/create-gem)](https://rubygems.org/gems/create-gem) [![CI](https://github.com/leonid-svyatov/create-gem/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/leonid-svyatov/create-gem/actions?query=workflow%3ACI)
+# create-ruby-gem [![Gem Version](https://img.shields.io/gem/v/create-ruby-gem)](https://rubygems.org/gems/create-ruby-gem) [![CI](https://github.com/svyatov/create-ruby-gem/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/svyatov/create-ruby-gem/actions?query=workflow%3ACI)
 
-> Stop forgetting `bundle gem` options. An interactive TUI wizard that detects your Bundler version, shows only the options it supports, remembers your choices, and saves presets.
+> Create Ruby gems with an interactive CLI wizard, which remembers your choices! No more `bundle gem` flags look-ups 🙌
 
 ## Table of Contents
 
@@ -25,20 +25,20 @@ Ruby 3.2+ and Bundler 2.4+ are required.
 ## Installation
 
 ```bash
-gem install create-gem
+gem install create-ruby-gem
 ```
 
 ## Quick Start
 
 ```bash
-create-gem my_awesome_gem
+create-ruby-gem my_awesome_gem
 ```
 
 The wizard detects your Ruby and Bundler versions, walks you through every supported option, shows a summary of the `bundle gem` command it will run, and lets you edit or confirm before executing.
 
 ## Interactive Wizard
 
-Running `create-gem <name>` starts the step-by-step wizard:
+Running `create-ruby-gem <name>` starts the step-by-step wizard:
 
 1. **Version detection** — detects Ruby, RubyGems, and Bundler versions at runtime.
 2. **Option filtering** — shows only options your Bundler version supports (see [Compatibility Matrix](#compatibility-matrix)).
@@ -56,19 +56,19 @@ Save, load, and manage option presets:
 
 ```bash
 # Save options as a preset during gem creation
-create-gem my_gem --save-preset oss-defaults
+create-ruby-gem my_gem --save-preset oss-defaults
 
 # Create a gem using a saved preset (non-interactive)
-create-gem my_gem --preset oss-defaults
+create-ruby-gem my_gem --preset oss-defaults
 
 # List all saved presets
-create-gem --list-presets
+create-ruby-gem --list-presets
 
 # Show a preset's options
-create-gem --show-preset oss-defaults
+create-ruby-gem --show-preset oss-defaults
 
 # Delete a preset
-create-gem --delete-preset oss-defaults
+create-ruby-gem --delete-preset oss-defaults
 ```
 
 ## Compatibility Matrix
@@ -92,7 +92,7 @@ Options available depend on your Bundler version. The wizard automatically hides
 
 ## Configuration
 
-Config is stored at `~/.config/create-gem/config.yml` (or `$XDG_CONFIG_HOME/create-gem/config.yml`).
+Config is stored at `~/.config/create-ruby-gem/config.yml` (or `$XDG_CONFIG_HOME/create-ruby-gem/config.yml`).
 
 The file contains:
 
@@ -113,7 +113,7 @@ The file contains:
 | `--dry-run` | Print the `bundle gem` command without executing |
 | `--bundler-version VERSION` | Override the detected Bundler version |
 | `--doctor` | Print runtime versions and supported options |
-| `--version` | Print the create-gem version |
+| `--version` | Print the create-ruby-gem version |
 
 ## Development
 
@@ -125,7 +125,7 @@ You can also run `bin/console` for an interactive prompt.
 bundle exec rake          # tests + rubocop (default task)
 bundle exec rake spec     # tests only
 bundle exec rake yard     # generate YARD docs into doc/
-exe/create-gem            # run the CLI locally
+exe/create-ruby-gem            # run the CLI locally
 ```
 
 ## Contributing

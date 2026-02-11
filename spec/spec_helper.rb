@@ -6,7 +6,7 @@ SimpleCov.start do
   add_filter '/spec/'
 end
 
-require 'create_gem'
+require 'create_ruby_gem'
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

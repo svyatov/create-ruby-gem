@@ -17,4 +17,10 @@ require 'yard'
 
 YARD::Rake::YardocTask.new
 
+Rake::Task['release:rubygem_push'].enhance(['fetch_otp'])
+
+task :fetch_otp do
+  ENV['GEM_HOST_OTP_CODE'] = `op item get "RubyGems" --otp`.strip
+end
+
 task default: %i[spec rubocop]

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-`create-gem` is an interactive TUI wizard wrapping `bundle gem`. It detects the user's Ruby/Bundler versions, shows only compatible options via a static compatibility matrix, and builds the correct `bundle gem` command. Config (presets, last-used options) is stored in `~/.config/create-gem/config.yml`.
+`create-ruby-gem` is an interactive TUI wizard wrapping `bundle gem`. It detects the user's Ruby/Bundler versions, shows only compatible options via a static compatibility matrix, and builds the correct `bundle gem` command. Config (presets, last-used options) is stored in `~/.config/create-ruby-gem/config.yml`.
 
 ## Commands
 
@@ -12,15 +12,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 bundle exec rake          # run tests + rubocop (default task)
 bundle exec rake spec     # tests only
 bundle exec rake rubocop  # lint only (with --parallel --autocorrect)
-bundle exec rspec spec/create_gem/cli_spec.rb          # single test file
-bundle exec rspec spec/create_gem/cli_spec.rb:42       # single example by line
+bundle exec rspec spec/create_ruby_gem/cli_spec.rb          # single test file
+bundle exec rspec spec/create_ruby_gem/cli_spec.rb:42       # single example by line
 bin/console               # IRB with gem loaded
-exe/create-gem            # run the CLI locally
+exe/create-ruby-gem            # run the CLI locally
 ```
 
 ## Architecture
 
-Entry point: `exe/create-gem` → `CreateGem::CLI.start(ARGV)`.
+Entry point: `exe/create-ruby-gem` → `CreateRubyGem::CLI.start(ARGV)`.
 
 Key flow: CLI parses flags → detects runtime versions → looks up `Compatibility::Matrix` entry for the Bundler version → runs `Wizard` (interactive) or loads a preset → validates options → `CommandBuilder` assembles the `bundle gem` command array → `Runner` executes it.
 
@@ -62,7 +62,7 @@ GitHub Actions matrix: Ruby 3.2–4.0 × Bundler 2.4–4.0. Runs `bundle exec ra
 
 - Ruby >= 3.2. `frozen_string_literal: true` everywhere.
 - RSpec with `expect` syntax only, monkey patching disabled.
-- Version in `lib/create_gem/version.rb`. SemVer, currently `0.x.y`.
+- Version in `lib/create_ruby_gem/version.rb`. SemVer, currently `0.x.y`.
 
 ## Documentation Style
 
@@ -99,7 +99,7 @@ Before committing changes, always verify these files are updated to accurately r
 - **CLAUDE.md** - Update this file
 - **README.md** - Update usage examples, Table of Contents, and compatibility matrix
 - **CHANGELOG.md** - Add entry under `[Unreleased]` section describing the change (use only standard Keep a Changelog categories — see sec_id's CLAUDE.md for the canonical list)
-- **create-gem.gemspec** - Update `description` if adding/removing supported features
+- **create-ruby-gem.gemspec** - Update `description` if adding/removing supported features
 
 ## Releasing a New Version
 
@@ -108,8 +108,8 @@ This project follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.
 - **MINOR** — new features (backwards-compatible)
 - **PATCH** — bug fixes (backwards-compatible)
 
-1. Update `lib/create_gem/version.rb` with the new version number
+1. Update `lib/create_ruby_gem/version.rb` with the new version number
 2. Update `CHANGELOG.md`: change `[Unreleased]` to `[X.Y.Z] - YYYY-MM-DD` and add new empty `[Unreleased]` section
 3. Commit changes: `git commit -am "chore: bump version to X.Y.Z"`
 4. Release: `bundle exec rake release` — builds the gem, creates and pushes the git tag, pushes to RubyGems.org
-5. Create GitHub release at https://github.com/leonid-svyatov/create-gem/releases with notes from CHANGELOG
+5. Create GitHub release at https://github.com/svyatov/create-ruby-gem/releases with notes from CHANGELOG
