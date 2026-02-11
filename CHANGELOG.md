@@ -8,22 +8,11 @@ and [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## [Unreleased]
 
-### Changed
-
-- Grouped detectors under `Detection` namespace: `Detection::BundlerDefaults`, `Detection::BundlerVersion`, `Detection::Runtime`.
-- Renamed `RuntimeVersions::Versions` to `Detection::RuntimeInfo`.
-- Flattened `Command::Builder` to `CommandBuilder` and `Wizard::Session` to `Wizard`.
-- Renamed `UI::InteractiveKeymap` to `UI::BackNavigationPatch`.
-- Renamed `CLI#start` instance method to `CLI#run` (class method `CLI.start` unchanged).
-- `CommandBuilder` now accepts `compatibility_entry:` instead of `bundler_version:`.
-- Separated validation from `CommandBuilder` — `Options::Validator` is now called by CLI before building.
-- Extracted `UI::Prompter.setup!` class method for global side effects (stdout router, Ctrl+B patch).
-- Made `UI::Palette` injectable in CLI via `palette:` keyword.
-- Replaced magic string sentinels (`'__back__'`, `'__bundler_default__'`) with `Object.new.freeze`.
+## [0.1.0] - 2026-02-10
 
 ### Added
 
-- Interactive wizard for `bundle gem` with back/edit/cancel flow, summary diff, and preset save prompt.
+- Interactive wizard for `bundle gem` with back/edit/cancel flow, command summary, and preset save prompt.
 - Preset commands: `--list-presets`, `--show-preset`, `--delete-preset`, and `--preset` for non-interactive creation.
 - Runtime diagnostics: `--doctor` and `--version`.
 - Static Bundler compatibility matrix with explicit unsupported-version errors.
