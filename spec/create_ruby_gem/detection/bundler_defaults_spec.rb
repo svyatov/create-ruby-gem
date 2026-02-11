@@ -47,6 +47,13 @@ RSpec.describe CreateRubyGem::Detection::BundlerDefaults do
     expect(defaults).to eq(described_class::FALLBACKS)
   end
 
+  it 'returns fallbacks when Bundler.settings raises NoMethodError' do
+    stub_const('Bundler', Module.new)
+    defaults = described_class.new.detect
+
+    expect(defaults).to eq(described_class::FALLBACKS)
+  end
+
   it 'normalizes string booleans to actual booleans' do
     settings = { 'gem.coc' => 'true', 'gem.mit' => 'false' }
     defaults = described_class.new(settings: settings).detect

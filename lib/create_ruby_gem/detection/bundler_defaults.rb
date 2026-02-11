@@ -66,9 +66,10 @@ module CreateRubyGem
 
       # @return [Bundler::Settings, nil]
       def default_settings
-        return nil unless defined?(::Bundler)
-
+        require 'bundler'
         ::Bundler.settings
+      rescue LoadError, StandardError
+        nil
       end
 
       # @param value [String, Object, nil]

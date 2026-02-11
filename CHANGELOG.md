@@ -8,6 +8,10 @@ and [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Crash on Ruby 4.0 / RubyGems 4.0 where `Bundler.settings` was unavailable because Bundler was only partially loaded.
+
 ## [0.1.0] - 2026-02-10
 
 ### Added
