@@ -27,6 +27,6 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'cli-kit', '= 5.0.1'
+  spec.add_dependency 'cli-kit', '= 5.2.0'
   spec.add_dependency 'cli-ui', '= 2.7.0'
 end
