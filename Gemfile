@@ -12,5 +12,5 @@ gem 'rspec', '= 3.13.2'
 
 gem 'rubocop', '1.89.0'
 
-gem 'simplecov', '~> 0.22', require: false
+gem 'simplecov', '~> 1.0', require: false
 gem 'yard', '~> 0.9'
