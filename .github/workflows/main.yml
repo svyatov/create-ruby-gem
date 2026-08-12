@@ -37,7 +37,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set up Ruby
-        uses: ruby/setup-ruby@v1.288.0
+        uses: ruby/setup-ruby@v1.321.0
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: ${{ matrix.bundler }}
