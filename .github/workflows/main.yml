@@ -33,7 +33,7 @@ jobs:
             bundler: "4.0.4"
 
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
       - name: Set up Ruby
